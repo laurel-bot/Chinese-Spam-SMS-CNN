@@ -69,6 +69,7 @@ def train():
     
     train_losses, val_losses = [], []
     train_accs, val_accs = [], []
+    val_precisions, val_recalls, val_f1s = [], [], []
     
     best_val_f1 = 0.0
     
@@ -122,6 +123,9 @@ def train():
         
         val_losses.append(epoch_val_loss)
         val_accs.append(epoch_val_acc)
+        val_precisions.append(val_precision)
+        val_recalls.append(val_recall)
+        val_f1s.append(val_f1)
         
         print(f"Epoch {epoch+1}/{epochs} | "
               f"Train Loss: {epoch_train_loss:.4f} Acc: {epoch_train_acc:.4f} | "
@@ -132,27 +136,65 @@ def train():
             torch.save(model.state_dict(), model_save_path)
             print(f"--> Saved best model with Val F1: {best_val_f1:.4f}")
             
-    # Plotting training progress
-    plt.figure(figsize=(12, 4))
-    
-    plt.subplot(1, 2, 1)
-    plt.plot(train_losses, label='Train Loss')
-    plt.plot(val_losses, label='Val Loss')
-    plt.title('Loss Change Curves')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
-    
-    plt.subplot(1, 2, 2)
-    plt.plot(train_accs, label='Train Acc')
-    plt.plot(val_accs, label='Val Acc')
-    plt.title('Accuracy Curves')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.legend()
-    
-    plt.tight_layout()
-    plt.savefig('training_curves.png')
+    # Plotting training progress — 2x3 subplot grid for all metrics
+    epoch_range = range(1, epochs + 1)
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+
+    # (0, 0) — Loss
+    axes[0, 0].plot(epoch_range, train_losses, 'o-', label='Train Loss')
+    axes[0, 0].plot(epoch_range, val_losses, 's-', label='Val Loss')
+    axes[0, 0].set_title('Loss')
+    axes[0, 0].set_xlabel('Epoch')
+    axes[0, 0].set_ylabel('Loss')
+    axes[0, 0].legend()
+    axes[0, 0].grid(True)
+
+    # (0, 1) — Accuracy
+    axes[0, 1].plot(epoch_range, train_accs, 'o-', label='Train Acc')
+    axes[0, 1].plot(epoch_range, val_accs, 's-', label='Val Acc')
+    axes[0, 1].set_title('Accuracy')
+    axes[0, 1].set_xlabel('Epoch')
+    axes[0, 1].set_ylabel('Accuracy')
+    axes[0, 1].legend()
+    axes[0, 1].grid(True)
+
+    # (0, 2) — Val Precision
+    axes[0, 2].plot(epoch_range, val_precisions, 's-', color='tab:green', label='Val Precision')
+    axes[0, 2].set_title('Validation Precision')
+    axes[0, 2].set_xlabel('Epoch')
+    axes[0, 2].set_ylabel('Precision')
+    axes[0, 2].legend()
+    axes[0, 2].grid(True)
+
+    # (1, 0) — Val Recall
+    axes[1, 0].plot(epoch_range, val_recalls, 's-', color='tab:orange', label='Val Recall')
+    axes[1, 0].set_title('Validation Recall')
+    axes[1, 0].set_xlabel('Epoch')
+    axes[1, 0].set_ylabel('Recall')
+    axes[1, 0].legend()
+    axes[1, 0].grid(True)
+
+    # (1, 1) — Val F1
+    axes[1, 1].plot(epoch_range, val_f1s, 's-', color='tab:red', label='Val F1')
+    axes[1, 1].set_title('Validation F1 Score')
+    axes[1, 1].set_xlabel('Epoch')
+    axes[1, 1].set_ylabel('F1')
+    axes[1, 1].legend()
+    axes[1, 1].grid(True)
+
+    # (1, 2) — Combined Val Precision / Recall / F1
+    axes[1, 2].plot(epoch_range, val_precisions, 's-', label='Precision')
+    axes[1, 2].plot(epoch_range, val_recalls, '^-', label='Recall')
+    axes[1, 2].plot(epoch_range, val_f1s, 'D-', label='F1')
+    axes[1, 2].set_title('Val Precision / Recall / F1')
+    axes[1, 2].set_xlabel('Epoch')
+    axes[1, 2].set_ylabel('Score')
+    axes[1, 2].legend()
+    axes[1, 2].grid(True)
+
+    fig.suptitle('Training & Validation Metrics', fontsize=16, fontweight='bold')
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig('training_curves.png', dpi=150)
     print("Training plot saved as 'training_curves.png'")
 
 if __name__ == '__main__':
